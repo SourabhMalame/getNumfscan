@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scan And Pay</title>
+    <title>QR Code Scanner</title>
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
 </head>
 <body>
-    <h1>Camera Access Example</h1>
-    <video id="video" width="640" height="480" autoplay></video>
-    <script src="camera.js"></script>
+    <h1>QR Code Scanner</h1>
+    <div id="reader" style="width: 500px;"></div>
+    <p id="qr-result">QR Code Data: <span id="result"></span></p>
+    
+    <!-- Link to external JavaScript file -->
+    <script src="scanner.js"></script>
 </body>
 </html>

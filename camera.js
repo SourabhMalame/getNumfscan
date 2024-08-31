@@ -1,28 +1,26 @@
-async function startCamera() {
-    try {
-        // Check if the browser supports getUserMedia
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            // Request video access with the back camera
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: { exact: "environment" } // Access the back camera
-                }
-            });
-
-            // Get the video element
-            const videoElement = document.getElementById('video');
-
-            // Set the source of the video element to the stream
-            videoElement.srcObject = stream;
-
-            console.log('Back camera access granted');
-        } else {
-            console.error('getUserMedia not supported on this browser');
-        }
-    } catch (error) {
-        console.error('Error accessing camera: ', error);
-    }
+function onScanSuccess(decodedText, decodedResult) {
+    // Handle the result here
+    document.getElementById('result').innerText = decodedText;
+    console.log(`Code scanned = ${decodedText}`, decodedResult);
 }
 
-// Start the camera when the page loads
-window.addEventListener('load', startCamera);
+function onScanFailure(error) {
+    // Handle scan failure, usually better to ignore and keep scanning
+    console.warn(`Code scan error = ${error}`);
+}
+
+// Create an instance of Html5QrcodeScanner with the ID of the div
+const html5QrCode = new Html5Qrcode("reader");
+
+// Start scanning the back camera
+html5QrCode.start(
+    { facingMode: "environment" }, // Specify the back camera
+    {
+        fps: 10,    // Optional, frame per seconds for scanning
+        qrbox: { width: 250, height: 250 }  // Optional, specify scanning box dimensions
+    },
+    onScanSuccess,
+    onScanFailure
+).catch(err => {
+    console.log(`Unable to start scanning, error: ${err}`);
+});
