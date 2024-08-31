@@ -3,29 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Scanner</title>
-    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <title>GPay QR Code Scanner</title>
     <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        #qr-video {
+            width: 300px;
+            height: 300px;
+            border: 2px solid white;
+        }
         #qr-result {
             margin-top: 20px;
-            font-size: 20px;
+            font-size: 1.5rem;
+            word-wrap: break-word;
+            max-width: 80%;
+            text-align: center;
         }
-        #test-qr {
+        #phone-number {
+            margin-top: 10px;
+            font-size: 1.2rem;
+            word-wrap: break-word;
+            max-width: 80%;
+            text-align: center;
+        }
+        #share-btn {
             margin-top: 20px;
-            width: 200px;
-            height: 200px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #share-btn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
-    <h1>QR Code Scanner</h1>
-    <div id="reader" style="width: 500px; height: 500px;"></div>
-    <p id="qr-result">QR Code Data: <span id="result"></span></p>
+    <h1>GPay QR Code Scanner</h1>
+    <video id="qr-video"></video>
+    <div id="qr-result">QR Code Data:</div>
+    <div id="phone-number"></div>
+    <button id="share-btn" disabled>Share UPI Data</button>
 
-    <!-- Test QR Code Image -->
-    <img id="test-qr" src="https://upload.wikimedia.org/wikipedia/commons/8/87/QR_code_for_mobile_English_Wikipedia.svg" alt="Test QR Code">
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.3.1/dist/jsQR.js"></script>
+    <script>
+        const video = document.getElementById('qr-video');
+        const qrResult = document.getElementById('qr-result');
+        const phoneNumberDisplay = document.getElementById('phone-number');
+        const shareBtn = document.getElementById('share-btn');
+        let qrData = '';
 
-    <!-- Link to external JavaScript file -->
-    <script src="scanner.js"></script>
+        function startQRScanner() {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(stream => {
+                    video.srcObject = stream;
+                    video.setAttribute('playsinline', true); // required to tell iOS safari we don't want fullscreen
+                    video.play();
+                    requestAnimationFrame(tick);
+                })
+                .catch(err => {
+                    console.error('Error accessing camera: ', err);
+                });
+        }
+
+        function parseUPIData(upiData) {
+            const urlParams = new URLSearchParams(upiData.split('?')[1]);
+            const upiID = urlParams.get('pa');         // Payment Address
+            const payerName = urlParams.get('pn');     // Payer Name
+            const merchantCode = urlParams.get('mc');  // Merchant Code
+
+            // Extract phone number if it exists in the 'pa' field
+            let phoneNumber = '';
+            const phoneNumberMatch = upiID.match(/(\d{10})@/); // Assumes 10-digit phone number
+            if (phoneNumberMatch) {
+                phoneNumber = phoneNumberMatch[1];
+            }
+
+            return { upiID, payerName, merchantCode, phoneNumber };
+        }
+
+        function tick() {
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+                if (code) {
+                    qrData = code.data;
+                    const upiDetails = parseUPIData(qrData);
+                    
+                    qrResult.textContent = `UPI Data: ${qrData}`;
+                    phoneNumberDisplay.textContent = upiDetails.phoneNumber ? `Phone Number: ${upiDetails.phoneNumber}` : '';
+                    shareBtn.disabled = false;
+
+                    // Optional: Automatically redirect to UPI payment
+                    if (qrData.startsWith('upi://pay?')) {
+                        window.location.href = qrData;
+                    }
+                }
+            }
+            requestAnimationFrame(tick);
+        }
+
+        shareBtn.addEventListener('click', () => {
+            if (navigator.share && qrData) {
+                navigator.share({
+                    title: 'UPI Payment Data',
+                    text: qrData,
+                }).then(() => {
+                    console.log('Data shared successfully');
+                }).catch(err => {
+                    console.error('Error sharing data: ', err);
+                });
+            } else {
+                alert('Web Share API is not supported in this browser.');
+            }
+        });
+
+        startQRScanner();
+    </script>
 </body>
 </html>
