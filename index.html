@@ -79,17 +79,14 @@
 
         function parseUPIData(upiData) {
             const urlParams = new URLSearchParams(upiData.split('?')[1]);
-            const upiID = urlParams.get('pa');         // Payment Address
-            const payerName = urlParams.get('pn');     // Payer Name
-            const merchantCode = urlParams.get('mc');  // Merchant Code
-
-            // Extract phone number if it exists in the 'pa' field
+            const upiID = urlParams.get('pa');
+            const payerName = urlParams.get('pn');
+            const merchantCode = urlParams.get('mc');
             let phoneNumber = '';
-            const phoneNumberMatch = upiID.match(/(\d{10})@/); // Assumes 10-digit phone number
+            const phoneNumberMatch = upiID.match(/(\d{10})@/);
             if (phoneNumberMatch) {
                 phoneNumber = phoneNumberMatch[1];
             }
-
             return { upiID, payerName, merchantCode, phoneNumber };
         }
 
@@ -112,7 +109,6 @@
                     phoneNumberDisplay.textContent = upiDetails.phoneNumber ? `Phone Number: ${upiDetails.phoneNumber}` : '';
                     shareBtn.disabled = false;
 
-                    // Optional: Automatically redirect to UPI payment
                     if (qrData.startsWith('upi://pay?')) {
                         window.location.href = qrData;
                     }
