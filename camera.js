@@ -9,18 +9,22 @@ function onScanFailure(error) {
     console.warn(`Code scan error = ${error}`);
 }
 
-// Create an instance of Html5QrcodeScanner with the ID of the div
-const html5QrCode = new Html5Qrcode("reader");
+function startQrScanner() {
+    const html5QrCode = new Html5Qrcode("reader");
 
-// Start scanning the back camera
-html5QrCode.start(
-    { facingMode: "environment" }, // Specify the back camera
-    {
-        fps: 10,    // Optional, frame per seconds for scanning
-        qrbox: { width: 250, height: 250 }  // Optional, specify scanning box dimensions
-    },
-    onScanSuccess,
-    onScanFailure
-).catch(err => {
-    console.log(`Unable to start scanning, error: ${err}`);
-});
+    // Start scanning the back camera
+    html5QrCode.start(
+        { facingMode: "environment" }, // Specify the back camera
+        {
+            fps: 10,    // Optional, frame per seconds for scanning
+            qrbox: { width: 250, height: 250 }  // Optional, specify scanning box dimensions
+        },
+        onScanSuccess,
+        onScanFailure
+    ).catch(err => {
+        console.log(`Unable to start scanning, error: ${err}`);
+    });
+}
+
+// Wait until the DOM is fully loaded before starting the scanner
+window.addEventListener('load', startQrScanner);
