@@ -2,8 +2,12 @@ async function startCamera() {
     try {
         // Check if the browser supports getUserMedia
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            // Request video access
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            // Request video access with the back camera
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: { exact: "environment" } // Access the back camera
+                }
+            });
 
             // Get the video element
             const videoElement = document.getElementById('video');
@@ -11,7 +15,7 @@ async function startCamera() {
             // Set the source of the video element to the stream
             videoElement.srcObject = stream;
 
-            console.log('Camera access granted');
+            console.log('Back camera access granted');
         } else {
             console.error('getUserMedia not supported on this browser');
         }
